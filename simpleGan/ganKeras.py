@@ -1,29 +1,31 @@
 import numpy as np
 from tqdm import tqdm
 from keras.models import Sequential
-from keras.layers import Dense , LeakyReLU , Flatten , Input
+from keras.layers import Dense , LeakyReLU , Flatten , Input , Dropout
 from keras.optimizers import Adam
 from keras.datasets.mnist import load_data
 
 def discriminator():
-	model = Sequential([
-		  Dense(128  , input_shape = (784,)) ,
-      LeakyReLU(0.1),
-		  Dense(1 , activation = "sigmoid")])
-	opt = Adam(lr = 3e-4)
-	model.compile(optimizer = opt , loss = "binary_crossentropy" , metrics = ["accuracy"])
-	return model
+  d = Sequential()
+  d.add(Dense(1024, input_dim=784, activation=LeakyReLU(alpha=0.2)))
+  d.add(Dropout(0.3))
+  d.add(Dense(512, activation=LeakyReLU(alpha=0.2)))
+  d.add(Dropout(0.3))
+  d.add(Dense(256, activation=LeakyReLU(alpha=0.2)))
+  d.add(Dropout(0.3))
+  d.add(Dense(1, activation='sigmoid'))  # Values between 0 and 1
+  d.compile(loss='binary_crossentropy', optimizer = "adam", metrics=['accuracy'])
+  return d
 
 
 def generator(z_dim):
-	model = Sequential([
-    Dense(128 , input_shape = (z_dim,) ) ,
-    LeakyReLU(0.1),
-		Dense(256) ,
-    LeakyReLU(0.1),
-		Dense(28 * 28  , activation = "tanh")
-  ])
-	return model
+  model = Sequential([
+                      Dense(256, input_dim=z_dim, activation=LeakyReLU(alpha=0.2)) ,
+                      Dense(512, activation=LeakyReLU(alpha=0.2)),
+                      Dense(1024, activation=LeakyReLU(alpha=0.2)),
+                      Dense(784 , activation = "tanh")])
+  model.compile(loss='binary_crossentropy', optimizer = "adam", metrics=['accuracy'])
+  return model
 
 
 def GAN(discriminator , generator):
@@ -65,18 +67,20 @@ def train(epochs , img_shape , z_dim , dataset , batch_size):
   disc = discriminator()
   gen  = generator(z_dim)
   gan  = GAN(disc , gen)
+  batches = len(dataset) // 32
   for epoch in range(epochs):
-    real_x , real_y = generate_real_sample(batch_size , dataset)
-    fake_x , fake_y = generate_fake_samples(z_dim , gen , batch_size)
-    batch = np.concatenate((real_x , fake_x))
-    y     = np.concatenate((real_y , fake_y))
-    d_loss, _  = disc.train_on_batch(batch , y) 
-    latent_gan =  generate_latent_points(batch_size , z_dim)
-    g_loss , _  = gan.train_on_batch(latent_gan , np.ones(batch_size))
+    for batch in range(batches):
+      real_x , real_y = generate_real_sample(batch_size , dataset)
+      fake_x , fake_y = generate_fake_samples(z_dim , gen , batch_size)
+      batch = np.concatenate((real_x , fake_x))
+      y     = np.concatenate((real_y , fake_y))
+      d_loss, _  = disc.train_on_batch(batch , y) 
+      latent_gan =  generate_latent_points(batch_size , z_dim)
+      g_loss , _  = gan.train_on_batch(latent_gan , np.ones(batch_size))
     print(f"Epoch [{epoch}/{epochs}] \ Loss D: {d_loss:.4f}, loss G: {g_loss:.4f}")
   return disc , gen
 
-epochs     = 100
+epochs     = 10
 img_shape  = 28 * 28
 z_dim      = 100
 dataset    = load_real_samples()
