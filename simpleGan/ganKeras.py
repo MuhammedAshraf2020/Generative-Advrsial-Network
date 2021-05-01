@@ -1,4 +1,3 @@
-
 import numpy as np
 from tqdm import tqdm
 from keras.models import Sequential
@@ -47,15 +46,18 @@ def generate_real_sample(batch_size , dataset):
   idxs = np.random.randint(0 , dataset.shape[0] , batch_size)
   X = dataset[idxs]
   X = X.reshape(batch_size , 28 * 28)
-  y = np.ones((batch_size , 1))
+  y = np.ones((batch_size))
   return X , y
 
-generate_latent_points = lambda batch_size , z_dim : np.random.randn(batch_size , z_dim) 
+def generate_latent_points( batch_size , z_dim):
+	x_input = np.random.randn(z_dim * batch_size)
+	x_input = x_input.reshape(batch_size, z_dim)
+	return x_input
 
 def generate_fake_samples(latent_dim , generator , batch_size):
   points     = generate_latent_points(batch_size , latent_dim)
   fake_data  = generator.predict(points)
-  fake_label = np.zeros((batch_size , 1))
+  fake_label = np.zeros((batch_size))
   return fake_data , fake_label
 
 
