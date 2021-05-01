@@ -8,4 +8,4 @@ with LeakyReLU and Tanh in the last layer to activate output between [-1 , 1]
 
 ##Discriminator
 ![alt text](https://github.com/MuhammedAshraf2020/Generative-Advrsial-Network/blob/main/assets/nn.svg)
-
+Discriminator is ordinary classifier whith classify input [real , fake]
