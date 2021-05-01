@@ -23,7 +23,7 @@ def generator(z_dim):
                       Dense(256, input_dim=z_dim, activation=LeakyReLU(alpha=0.2)) ,
                       Dense(512, activation=LeakyReLU(alpha=0.2)),
                       Dense(1024, activation=LeakyReLU(alpha=0.2)),
-                      Dense(784 , activation = "tanh")])
+                      Dense(784 , activation = "sigmoid")])
   model.compile(loss='binary_crossentropy', optimizer = "adam", metrics=['accuracy'])
   return model
 
@@ -38,13 +38,14 @@ def GAN(discriminator , generator):
   return model
 
 def load_real_samples():
-	(trainX, _), (_, _) = load_data()
-	X = trainX.astype('float32')
-	X = X / 255.0
-	return X
+  (trainX, _), (_, _) = load_data()
+  X = trainX.astype('float32')
+  X = X / 255.0
+  X = X.reshape((X.shape[0] , -1))
+  return X
 
 
-def generate_real_sample(batch_size , dataset):
+"""def generate_real_sample(batch_size , dataset):
   idxs = np.random.randint(0 , dataset.shape[0] , batch_size)
   X = dataset[idxs]
   X = X.reshape(batch_size , 28 * 28)
@@ -61,7 +62,7 @@ def generate_fake_samples(latent_dim , generator , batch_size):
   fake_data  = generator.predict(points)
   fake_label = np.zeros((batch_size))
   return fake_data , fake_label
-
+"""
 
 def train(epochs , img_shape , z_dim , dataset , batch_size):
   disc = discriminator()
@@ -70,13 +71,21 @@ def train(epochs , img_shape , z_dim , dataset , batch_size):
   batches = len(dataset) // 32
   for epoch in range(epochs):
     for batch in range(batches):
-      real_x , real_y = generate_real_sample(batch_size , dataset)
-      fake_x , fake_y = generate_fake_samples(z_dim , gen , batch_size)
-      batch = np.concatenate((real_x , fake_x))
-      y     = np.concatenate((real_y , fake_y))
-      d_loss, _  = disc.train_on_batch(batch , y) 
-      latent_gan =  generate_latent_points(batch_size , z_dim)
-      g_loss , _  = gan.train_on_batch(latent_gan , np.ones(batch_size))
+      image_batch = dataset[np.random.randint(0, dataset.shape[0], size=batch_size)]
+      noise = np.random.normal(0, 1, size=(batch_size, z_dim))
+      generated_images = gen.predict(noise)
+      X = np.concatenate((image_batch, generated_images))
+      y = np.zeros(2*batch_size)
+      y[:batch_size] = 0.9  
+      disc.trainable = True
+      d_loss = disc.train_on_batch(X, y)
+      disc.trainable = True
+      d_loss , _ = disc.train_on_batch(X, y)
+      noise = np.random.normal(0, 1, size=(batch_size, z_dim))
+      y2 = np.ones(batch_size)
+      disc.trainable = False
+      g_loss , _ = gan.train_on_batch(noise, y2)
+
     print(f"Epoch [{epoch}/{epochs}] \ Loss D: {d_loss:.4f}, loss G: {g_loss:.4f}")
   return disc , gen
 
