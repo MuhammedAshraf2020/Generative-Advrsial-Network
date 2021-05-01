@@ -29,11 +29,10 @@ class Generator(nn.Module):
             nn.Linear(z_dim, 128),
             nn.LeakyReLU(0.01),
             nn.Linear(128 , 256),
-            nn.Lea
+            nn.LeakyReLU(0.01),
             nn.Linear(256, img_dim),
-            nn.Tanh(),
+            nn.Tanh(),  # normalize inputs to [-1, 1] so make outputs [-1, 1]
         )
-
     def forward(self, x):
         return self.gen(x)
 
