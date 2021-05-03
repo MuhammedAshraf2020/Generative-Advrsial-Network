@@ -16,5 +16,5 @@ python generate.py --weights.pt --nums 200
 ```
 ## Samples
 <p align="center">
-    <img src="assets/fcgan.PNG" width="360"\>
+    <img src="../assets/fcgan.PNG" width="360"\>
 </p>
