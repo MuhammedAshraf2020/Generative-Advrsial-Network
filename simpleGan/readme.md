@@ -15,4 +15,4 @@ python train.py
 python generate.py --weights.pt --nums 200
 ```
 ## Samples
-[!alt text](https://github.com/MuhammedAshraf2020/Generative-Advrsial-Network/blob/main/assets/fcgan.PNG)
+![alt text](https://github.com/MuhammedAshraf2020/Generative-Advrsial-Network/blob/main/assets/fcgan.PNG)
