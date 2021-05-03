@@ -14,3 +14,5 @@ python train.py
 ```bash
 python generate.py --weights.pt --nums 200
 ```
+## Samples
+[!alt text]()
