@@ -14,7 +14,7 @@ python train.py
 ```bash
 python generate.py --weights.pt --nums 200
 ```
-## Samples
+## Generated Samples
 <p align="center">
     <img src="../assets/fcgan.PNG" width="360"\>
 </p>
