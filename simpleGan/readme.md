@@ -3,12 +3,16 @@ We propose a new framework for estimating generative models via an adversarial p
 
 
 ##How its work
+
 after adding your custom data to model (change data loader) you can train model by train.py to get wights which make you able to generate new images using generate.py with any number of new examples
+
 ##Train
+
 ```bash
 python train.py
 ```
 ##Usage
+
 ```bash
 python generate.py --weights.pt --nums 200
 ```
