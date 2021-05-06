@@ -19,12 +19,13 @@ numbers = args.nums
 z_dim   = args.z_dim
 
 os.makedirs("new" , exist_ok = True)
-noise       = torch.randn(args.nums , z_dim)
-img_shape   = args.img_size * args.img_size * args.num_channels
-generator   = Generator(z_dim , args.num_channels , img_shape)
+noise       = torch.randn(args.nums , z_dim , 1 , 1)
+generator   = Generator(z_dim , args.num_channels , args.img_size)
 generator.load_state_dict(torch.load(args.path))
 generator.eval()
-
 outputs = generator(noise)
+outputs = outputs.permute(0 , 2 , 3 , 1)
+outputs = outputs.cpu().detach().numpy()
+outputs = (1/(2*2.25)) * outputs + 0.5
 for idx , out in tqdm(enumerate(outputs)):
-  plt.imsave("new/{}.jpg".format(idx) , out.detach().numpy() , cmap = "gray")
+  plt.imsave("new/{}.jpg".format(idx) , out)
