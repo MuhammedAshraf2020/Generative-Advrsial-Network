@@ -7,17 +7,18 @@ import torch.optim as optim
 import torchvision.datasets as datasets
 from  torch.utils.data import DataLoader
 import torchvision.transforms as transforms
-from models import Discriminator , Generator
+from models import Discriminator , Generator 
 from torch.utils.tensorboard import SummaryWriter 
 from torch.utils.tensorboard import SummaryWriter 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--img_size"      , type = int   ,  default = 64     , help = "The number of pixels in each channel")
 parser.add_argument("--num_channels"  , type = int   ,  default = 1      , help = "The number of channel 1 for grayscale , 3 for color image")
-parser.add_argument("--epochs"        , type = int   ,  default = 50     , help = "The number of epochs")
-parser.add_argument("--batch_size"    , type = int   ,  default = 128     , help = "Latent numbers ")
+parser.add_argument("--epochs"        , type = int   ,  default = 20     , help = "The number of epochs")
+parser.add_argument("--batch_size"    , type = int   ,  default = 32     , help = "Latent numbers ")
 parser.add_argument("--lr"            , type = float ,  default = 2e-4   , help = "Learning Rate" )
-parser.add_argument("--z_dim"         , type = int   ,  default = 100     , help = "Latent variable")
+parser.add_argument("--z_dim"         , type = int   ,  default = 100    , help = "Latent variable")
+parser.add_argument("--data_path"                                        , help = "Path of data")
 parser.add_argument("--write_path"    ,                 default = "logs" , )
 args = parser.parse_args()
 
@@ -40,30 +41,35 @@ print("Latent variable = " , z_dim)
 print("Device used     = " , device)
 print("Image shape     = " , img_shape)
 
-
-
-def initialize_weights(model):
-    for m in model.modules():
-        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.BatchNorm2d)):
-            nn.init.normal_(m.weight.data, 0.0, 0.02)
-
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
 
 discriminator = Discriminator(num_channels , img_size).to(device)
-generator     = Generator(z_dim ,num_channels , img_size).to(device)
-initialize_weights(generator)
-initialize_weights(discriminator)
-fixed_noise = torch.randn((batch_size, z_dim ,1,1)).to(device)
+generator     = Generator(z_dim ,num_channels , img_size ).to(device)
+
+generator.apply(weights_init)
+discriminator.apply(weights_init)
+
+fixed_noise = torch.randn((batch_size, z_dim , 1 , 1)).to(device)
+
 transform     = transforms.Compose([
     transforms.Resize(img_size) ,
+    transforms.CenterCrop(img_size),
     transforms.ToTensor() ,
-    transforms.Normalize((0.5,), (0.5,))])
+    transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))])
 
-opt_disc = optim.Adam(discriminator.parameters() , lr = lr) 
-opt_gen  = optim.Adam(generator.parameters() , lr = lr)
-advarsial_loss = torch.nn.BCELoss()
-dataset = datasets.MNIST(root="dataset/", transform=transform, download=True)
-loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+opt_disc = optim.Adam(discriminator.parameters() , lr = lr , betas=(0.5 , 0.999)) 
+opt_gen  = optim.Adam(generator.parameters() , lr = lr , betas=(0.5 , 0.999))
 criterion = nn.BCELoss()
+
+dataset = datasets.ImageFolder(root = args.data_path , transform = transform)
+loader  = DataLoader(dataset, batch_size = 32 , shuffle=True)
+
 #Train Model
 generator.train()
 discriminator.train()
@@ -76,7 +82,7 @@ for epoch in range(epochs):
     noise = torch.randn(batch_size , z_dim , 1 , 1).to(device)
     fake  = generator(noise)
         
-        #Discriminator Trainig
+    #Discriminator Trainig
     disc_real  = discriminator(real).view(-1)
     disc_fake  = discriminator(fake).view(-1)
 
@@ -85,24 +91,25 @@ for epoch in range(epochs):
     
     lossD_real =  criterion(disc_real , real_label)
     lossD_fake =  criterion(disc_fake , fake_label)
+
     lossD      = (lossD_real + lossD_fake) / 2 
     discriminator.zero_grad()
     lossD.backward(retain_graph=True)
     opt_disc.step()
 
-        #Generator trainig
+    #Generator trainig
     disc_fake = discriminator(fake).view(-1)
     lossG = criterion(disc_fake , torch.ones_like(disc_fake))
     generator.zero_grad()
     lossG.backward()
     opt_gen.step()
-    if batch_idx %100 == 0:
+    if batch_idx %200 == 0:
       print(f"Epoch [{epoch}/{epochs}] Batch {batch_idx}/{len(loader)} \ Loss D: {lossD:.4f}, loss G: {lossG:.4f}")
       with torch.no_grad():
         fake = generator(fixed_noise)
         data = real
-        img_grid_fake = torchvision.utils.make_grid(fake, normalize=True)
-        img_grid_real = torchvision.utils.make_grid(data, normalize=True)
+        img_grid_fake = torchvision.utils.make_grid(fake[:32], normalize=True)
+        img_grid_real = torchvision.utils.make_grid(data[:32], normalize=True)
         writer_fake.add_image(
                     "Mnist Fake Images", img_grid_fake, global_step=step
                 )
