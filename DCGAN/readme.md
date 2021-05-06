@@ -7,12 +7,12 @@ after adding your custom data to model (change data loader) you can train model 
 ## Train
 
 ```bash
-python train.py
+!python train.py --img_size 64 --num_channels 3 --epochs 5 --batch_size 128 --z_dim 100 --data_path "/content/img_align_celeba/"
 ```
 ## Usage
 
 ```bash
-python generate.py --weights.pt --nums 200
+!python generate.py --nums 10 --path /content/weights.pt --z_dim 100 --num_channels 3 --img_size 64
 ```
 ## Generated Samples
 <p align="center">
