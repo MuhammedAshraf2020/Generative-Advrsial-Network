@@ -18,6 +18,7 @@ DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 WRITER_FAKE = SummaryWriter("logs/fake")
 WRITER_REAL = SummaryWriter("logs/real")
 STEPS       = 0
+LOAD_MODELS = True
 
 #transformers which we need to apply on the image
 transform = transforms.Compose([
@@ -37,6 +38,10 @@ disc_opt  = optim.Adam(disc.parameters() , lr = LR)
 gen_opt   = optim.Adam(gen.parameters()  , lr = LR)
 criterion = nn.BCELoss()
 NOISE = torch.randn(BATCH_SIZE , Z_DIM).to(DEVICE)
+
+if LOAD_MODELS:
+  gen.load_state_dict(torch.load("gen_weights.pt"))
+  disc.load_state_dict(torch.load("disc_weights.pt"))
 
 for epoch in range(EPOCHS):
   for batch_idx , (x , _) in enumerate(loader):
@@ -76,5 +81,5 @@ for epoch in range(EPOCHS):
                     "Mnist Real Images", img_grid_real, global_step=STEPS
                 )
     STEPS += 1
-        
-torch.save(gen.state_dict() , "weights.pt")
+    torch.save(gen.state_dict()  , "gen_weights.pt")
+    torch.save(disc.state_dict() , "disc_weights.pt")
