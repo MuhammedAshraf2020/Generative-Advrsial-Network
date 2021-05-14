@@ -1,47 +1,44 @@
 import torch.nn as nn
+import torch
 
 
-						                                     #=====================#
-						                                     #       Generator     #
-						                                     #=====================#
-class Generator(nn.Module):
-  def __init__(self , z_dim , img_size):
-    super(Generator , self).__init__()
-    layers = [
-					*self.block(z_dim , 128) ,
-					*self.block(128   , 256 , normalize = True) ,
-					*self.block(256   , 512 , normalize = True) ,
-					nn.Linear(512    , img_size ) ,
-					nn.Tanh()]
-    self.model = nn.Sequential(*layers)
+class Discriminator(nn.Module):
+  def __init__(self , in_units):
+    super(Discriminator , self).__init__()
+    self.model = nn.Sequential(
+				*self.disc_block(in_units , 512 ),
+        		*self.disc_block(512 , 128) ,
+				 nn.Linear(128 , 1),
+				 nn.Sigmoid()
+			)
+  
+  def disc_block(self , in_units , out_units , normalize = True):
+    layers =  []
+    layers.append(nn.Linear(in_features = in_units , out_features = out_units)) 
+    layers.append(nn.LeakyReLU(0.01))
+    return layers
   
   def forward(self , x):
     return self.model(x)
-  
-  def block(self , in_channels , out_channels , normalize = False):
-    layers = [nn.Linear(in_channels , out_channels)]
-    if normalize:
-      layers.append(nn.BatchNorm1d(out_channels , 0.8))
-    layers.append(nn.LeakyReLU(0.1 , inplace = True))
-    return layers
 
 
-
-						                                     #=====================#
-						                                     #    Discriminator    #
-						                                     #=====================#
-
-class Discriminator(nn.Module):
-	def __init__(self , img_size):
-		
-		super(Discriminator , self).__init__()
+class Generator(nn.Module):
+	def __init__(self , z_dim , out_shape):
+		super(Generator , self).__init__()
 		self.model = nn.Sequential(
-			nn.Linear(img_size , 512) ,
-			nn.LeakyReLU(0.01)   ,
-			nn.Linear(512 , 128) ,
-			nn.LeakyReLU(0.1),
-			nn.Linear(128 , 1),
-			nn.Sigmoid())
-	
+			*self.gen_block(z_dim , 128 , normalize = False) ,
+			*self.gen_block(128 , 256)  ,
+			*self.gen_block(256 , 512)  ,
+			 nn.Linear(512 , out_shape),
+			 nn.Tanh())
+
+	def gen_block(self , in_units , out_units , normalize = True):
+		layers = []
+		layers.append(nn.Linear(in_units , out_units))
+		layers.append(nn.LeakyReLU(0.01 , inplace = True))
+		if normalize:
+			layers.append(nn.BatchNorm1d(out_units))
+		return layers
+
 	def forward(self , x):
 		return self.model(x)
