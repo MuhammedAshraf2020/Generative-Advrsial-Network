@@ -8,7 +8,7 @@ You Can read the paper from [Here](https://arxiv.org/pdf/1406.2661.pdf)
 after adding your custom data to model (change data loader) you can train model by train.py to get wights which make you able to generate new images using generate.py with any number of new examples.
 
 ```bash
-python generate.py --weights.pt --nums 200
+python generate.py --gen_weights.pt --nums 200
 ```
 ## Generated Samples
 <p align="center">
