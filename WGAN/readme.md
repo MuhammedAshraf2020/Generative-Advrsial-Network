@@ -4,5 +4,5 @@ We introduce a new algorithm named WGAN, an alternative to traditional GAN train
 ## Wasserstein Gan With Weight Clipping 0.01
 
 <p align="center">
-    <img src="../assets/w9.PNG" width="360"\>
+    <img src="../assets/wgan1.PNG" width="360"\>
 </p>
