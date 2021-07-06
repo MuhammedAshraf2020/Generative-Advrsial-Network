@@ -6,3 +6,9 @@ We introduce a new algorithm named WGAN, an alternative to traditional GAN train
 <p align="center">
     <img src="../assets/wgan1.PNG" width="360"\>
 </p>
+
+## Wasserstein Gan With Gradient Penality
+
+<p align="center">
+    <img src="../assets/gp.PNG" width="360"\>
+</p>
