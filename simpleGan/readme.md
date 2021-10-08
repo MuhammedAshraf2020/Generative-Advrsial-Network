@@ -11,6 +11,8 @@ after adding your custom data to model (change data loader) you can train model 
 python generate.py --gen_weights.pt --nums 200
 ```
 ## Generated Samples
+### Validation info
 <p align="center">
     <img src="../assets/fcgan.PNG" width="360"\>
 </p>
+### Train info
